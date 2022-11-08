@@ -1,0 +1,83 @@
+@model CardTokenizationTest.Database.Card
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Card</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form id="form-card" asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input type="hidden" asp-for="CardToken" class="form-control" />
+                <span asp-validation-for="CardToken" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserId" class="control-label"></label>
+                <input asp-for="UserId" class="form-control" />
+                <span asp-validation-for="UserId" class="text-danger"></span>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-md-6">
+        <div id="iframe-card"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <button type="button" id="btn-submit" class="btn btn-primary">Crear</button>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+<script src="@ViewData["IframeSdk"]"></script>
+<script>
+    var options = {
+        //Inputs
+        fontColor: "#495057",
+        backgroundColor: "#fff",
+        borderRadius: "0px",
+        borderWidth: "0px 0px 1px 0px",
+        borderColor: "#ced4da",
+        fontSize: "1rem",
+
+        //Errores
+        fontColorError: "#d00000",
+        borderColorError: "#000!important",
+
+        //Labels
+        LabelSize: "13px",
+        LabelColor: "#666666",
+
+        //iFrame
+        heightIframe: "370px",
+    };
+
+    var vault = VaultAPI.createCreditCardIframe(
+        "iframe-card",
+        "complete",
+        options,
+        "@ViewData["UsernameVault"]_@ViewData["PasswordVault"]"
+    );
+
+    document
+        .getElementById("btn-submit")
+        .addEventListener("click", function (event) {
+
+            vault.tokenize(false, function (response) {
+                console.log(response)
+                $("#CardToken").val(response.cardToken);
+                $("#form-card").submit();
+            });
+        });</script>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

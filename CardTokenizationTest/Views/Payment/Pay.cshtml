@@ -1,0 +1,108 @@
+﻿@model PaymentViewModel
+@{
+    ViewData["Title"] = "Realizar Pago";
+    var c = 0;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <h4>Detalle del pago</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            <b>Descripción:</b>
+        </div>
+        <div class="col-md-4">
+            <p>Pago de prueba</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <b>Monto:</b>
+        </div>
+        <div class="col-md-4">
+            <p>$1.800,00</p>
+        </div>
+    </div>
+    <hr />
+    <div class="row">
+        <div class="col-md-7">
+            <div id="radio-container" class="form-group">
+                <h6>Seleccione la tarjeta</h6>
+                @foreach (var card in Model.Cards)
+                {
+                    @if (c == 0)
+                    {
+                        <input type="radio" asp-for="CardToken" id="CardToken_@card.CardToken" value="@card.CardToken" checked />
+                    }
+                    else
+                    {
+                        <input type="radio" asp-for="CardToken" id="CardToken_@card.CardToken" value="@card.CardToken" />
+                    }
+                    <laber for="CardToken_@card.CardToken">@("XXXX-XXXX-XXXX-" + card.LastFourDigitsNumber + " (" + (card.Type == "CREDIT" ? "CRÉDITO" : "DÉBITO") + ")")</laber>
+                    <br />
+                    c++;
+                }
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-4">
+            <div id="iframe-card"></div>
+        </div>
+    </div>
+    <form id="form-pay" asp-action="Pay">
+        <input type="hidden" id="PaymentToken" name="PaymentToken" />
+        <input type="hidden" id="CardType" name="CardType" />
+    </form>
+    <div class="row">
+        <div class="col-md-6">
+            <button type="button" id="btn-submit" class="btn btn-primary">Pagar</button>
+        </div>
+    </div>
+</div>
+
+<script src="@ViewData["IframeSdk"]"></script>
+<script>var options = {
+        //Inputs
+        fontColor: "#495057",
+        backgroundColor: "#fff",
+        borderRadius: "0px",
+        borderWidth: "0px 0px 1px 0px",
+        borderColor: "#ced4da",
+        fontSize: "1rem",
+
+        //Errores
+        fontColorError: "#d00000",
+        borderColorError: "#000!important",
+
+        //Labels
+        LabelSize: "13px",
+        LabelColor: "#666666",
+
+        //iFrame
+        heightIframe: "150px",
+    };
+
+    var vault = VaultAPI.createCreditCardIframe(
+        "iframe-card",
+        "simple",
+        options,
+        "@ViewData["UsernameVault"]_@ViewData["PasswordVault"]"
+    );
+
+    document
+        .getElementById("btn-submit")
+        .addEventListener("click", function (event) {
+            vault.paymentCreate($('input[name=CardToken]:checked', '#radio-container').val(), function (response) {
+                console.log(response)
+                $("#PaymentToken").val(response.paymentToken);
+                $("#CardType").val(response.type);
+                $("#form-pay").submit();
+            });
+        });
+</script>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
